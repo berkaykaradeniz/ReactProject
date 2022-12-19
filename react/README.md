@@ -1,6 +1,6 @@
 # Registry form
 
-This project can be use form and select forms
+This project can be save form and select forms
 
 # Run project
 ## PHP
