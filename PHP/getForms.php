@@ -10,40 +10,25 @@
 
     header("Content-type: application/json; charset=utf-8");
     
-    $fullname = $_POST['fullname'];
-    $email = $_POST['email'];
-    $phonenumber = $_POST['phonenumber'];
+    $rows = array();
+    $sql = "select id,fullname,email,phonenumber from form";
+    if ($result = $conn -> query($sql)) {
+        while ($row = $result -> fetch_row()) {
+            $row0 = $row[0];
+            $row1 = $row[1];
+            $row2 = $row[2];
+            $row3 = $row[3];
 
-    if(!empty($fullname) && !empty($email) && !empty($phonenumber))
-    {
-        $sql = "INSERT INTO form (fullname,email,phonenumber) 
-        VALUES ('$fullname','$email','$phonenumber')";
-        if ($conn->query($sql) === TRUE) {
-            echo json_encode([
-                "fullname" => $fullname,
-                "state" => 1,
-                "type" => "success",
-                "message" => 'Kayıt Başarılı'
-                ]
-            );
-        } else {
-            echo json_encode([
-                "state" => 0,
-                "message" => 'Kayıt Hatası',
-                "type" => "danger"
-                ]
-            );
+            $ro = array();
+            $ro['id'] = $row0;
+            $ro['fullname'] = $row1;
+            $ro['email'] = $row2;
+            $ro['phonenumber'] = $row3;
+
+            $rows[] = $ro;
         }
+        $result -> free_result();
     }
-    else
-    {
-        echo json_encode([
-            "state" => 2,
-            "message" => 'Eksik Bilgi',
-            "type" => "warning"
-            ]
-        );
-    }
+    echo json_encode($rows);  
     $conn->close();        
-
     ?>

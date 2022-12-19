@@ -1,30 +1,54 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import $ from "jquery";
 import "./App.css";
 import Error from "./Error";
 
-import Toast from 'react-bootstrap/Toast';
 import Container from 'react-bootstrap/Container';
-import Button from 'react-bootstrap/Button';
+import BootstrapTable from 'react-bootstrap-table-next';
+import PhoneInput, {isValidPhoneNumber} from 'react-phone-number-input'
 
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
+import 'react-phone-number-input/style.css'
 
-//import validator from 'validator' 
 
-function App() {
+function App() {  
 	const [fullname, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phonenumber, setPhoneNumber] = useState("");
 	const [result, setResult] = useState("");
+  const [product, setProduct] = useState([]);
 
   let errorCount = 0;
   let errorMessage = '';
   let createForm = 'http://localhost:8000/createForm.php';
-  let getForms = 'http://localhost:8000/createForm.php';
+  let getForms = 'http://localhost:8000/getForms.php';
 
+  const columns = [{
+    dataField: 'fullname',
+    text: 'Fullname'
+  }, {
+    dataField: 'email',
+    text: 'Email'
+  }, {
+    dataField: 'phonenumber',
+    text: 'Phonenumber'
+  }];
 
-  //BOOTSTRAP ENTEGRE ET 
-  //JQUERY YERINE FETCH KULLAN
+  function setDatatable(){
+    $.ajax({
+      type: "POST",
+      url: getForms,
+      success(data) {
+        setProduct(data);
+      },
+    }); 
+  }
+
+  useEffect(() => {
+    setDatatable();
+  }, []);
+  
   //https://github.com/jackocnr/intl-tel-input
   //datatable ile kayıtları çek
 
@@ -57,16 +81,9 @@ function App() {
   function isValidEmail(email) {
     return /\S+@\S+\.\S+/.test(email);
   }
-/*
-  function validatePhoneNumber (number) {
-    const isValidPhoneNumber = validator.isMobilePhone(number)
-    return isValidPhoneNumber
-   }
-   */
 
 	const handleSumbit = (e) => { 
 		e.preventDefault();
-		const form = $(e.target);
     let message = 0;
   
     checkEmpty();//Checked empty inputs
@@ -76,31 +93,31 @@ function App() {
       errorMessage = 'Email is invalid';
       errorCount++;
     }
-/*
-    if (!validatePhoneNumber(phonenumber))
+
+    if (!isValidPhoneNumber(phonenumber))
     {
-      errorMessage = 'Phone Number is invalid';
+      errorMessage = 'PhoneNumber is invalid';
       errorCount++;
     }
-    */
 
     if (errorCount === 0)
     {
       //Create Form db after show message
       fetch(createForm , {
           method: 'POST',
-          headers: { "Content-Type": "application/x-www-form-urlencoded" }, // set the content type
-          body: form.serialize()
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: 'fullname=' + fullname + '&email=' + email + '&phonenumber=' + phonenumber
       })
       .then(resp => resp.json().then(data => ({status: resp.status, body: data})))
       .then(json => 
       {
-          if (json.status == 200)//İf request success show fullname
+          if (json.status === 200)//İf request success show fullname
             message = json.body.fullname + ' ' + json.body.message;           
           else
             message = json.body.message;           
 
           setResult(message);
+          setDatatable();
       })
     }
     else
@@ -130,11 +147,18 @@ function App() {
             <div className="row mt-3 offset-md-3">
               <div className="col-md-3"> Phone Number : </div>
               <div className="col-md-4">
-                <input className="form-control" type="text" id="phonenumber"name="phonenumber"	value={phonenumber} onChange={(event) => handleChangePhoneNumber(event)}/>
-              </div>
+                <PhoneInput
+                    country="TR"
+                    defaultCountry="TR"
+                    className="form-control"
+                    placeholder="+90"
+                    value={phonenumber}
+                    onChange={setPhoneNumber}/>
+                  </div>
             </div>
+        
             <div className="row mt-3">
-              <button className="form-control col-md-3" type="submit">Save Form</button>
+              <button className="form-control button button-primary col-md-3" type="submit">Save Form</button>
             </div>
           </div>
         </form>
@@ -142,6 +166,8 @@ function App() {
         <Error errors={result}/>
 
       </div>
+      <BootstrapTable keyField='id' data={product} columns={columns}/>
+
     </Container>
 	);
 }
