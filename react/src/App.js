@@ -2,21 +2,22 @@ import { useState, useEffect } from "react";
 import $ from "jquery";
 import "./App.css";
 import Error from "./Error";
+import axios from 'axios';
 
 import Container from 'react-bootstrap/Container';
 import BootstrapTable from 'react-bootstrap-table-next';
-import PhoneInput, {isValidPhoneNumber} from 'react-phone-number-input'
+import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input'
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import 'react-phone-number-input/style.css'
 
 
-function App() {  
-	const [fullname, setFullName] = useState("");
+function App() {
+  const [fullname, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phonenumber, setPhoneNumber] = useState("");
-	const [result, setResult] = useState("");
+  const [result, setResult] = useState("");
   const [product, setProduct] = useState([]);
 
   let errorCount = 0;
@@ -35,57 +36,51 @@ function App() {
     text: 'Phonenumber'
   }];
 
-  function setDatatable(){
+  const setDatatable = () => {
     $.ajax({
       type: "POST",
       url: getForms,
       success(data) {
         setProduct(data);
       },
-    }); 
+    });
   }
 
   useEffect(() => {
     setDatatable();
   }, []);
-  
-  //https://github.com/jackocnr/intl-tel-input
-  //datatable ile kayıtları çek
 
-	const handleChangeFullName = (e) => {
-		setFullName(e.target.value);
-	};
+  const handleChangeFullName = (e) => {
+    setFullName(e.target.value);
+  };
   const handleChangeEmail = (e) => {
-		setEmail(e.target.value);
-	};
-  const handleChangePhoneNumber = (e) => {
-		setPhoneNumber(e.target.value);
-	};
+    setEmail(e.target.value);
+  };
 
-  function checkEmpty(){
+  const checkEmpty = () => {
     let cantEmpty = "Can't Empty.";
-    if (fullname === ''){
+    if (fullname === '') {
       errorMessage += 'Fullname ' + cantEmpty;
       errorCount++;
     }
-    if (email === ''){
+    if (email === '') {
       errorMessage += 'Email ' + cantEmpty;
       errorCount++;
     }
-    if (phonenumber === ''){
+    if (phonenumber === '') {
       errorMessage += 'PhoneNumber ' + cantEmpty;
       errorCount++;
     }
   }
 
-  function isValidEmail(email) {
+  const isValidEmail = (email) => {
     return /\S+@\S+\.\S+/.test(email);
   }
 
-	const handleSumbit = (e) => { 
-		e.preventDefault();
+  const handleSumbit = (e) => {
+    e.preventDefault();
     let message = 0;
-  
+
     checkEmpty();//Checked empty inputs
 
     //Checked Email input
@@ -94,39 +89,60 @@ function App() {
       errorCount++;
     }
 
-    if (!isValidPhoneNumber(phonenumber))
-    {
+    if (!isValidPhoneNumber(phonenumber)) {
       errorMessage = 'PhoneNumber is invalid';
       errorCount++;
     }
 
-    if (errorCount === 0)
-    {
+    if (errorCount === 0) {
       //Create Form db after show message
-      fetch(createForm , {
-          method: 'POST',
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: 'fullname=' + fullname + '&email=' + email + '&phonenumber=' + phonenumber
-      })
-      .then(resp => resp.json().then(data => ({status: resp.status, body: data})))
-      .then(json => 
-      {
-          if (json.status === 200)//İf request success show fullname
-            message = json.body.fullname + ' ' + json.body.message;           
+      // fetch(createForm, {
+      //   method: 'POST',
+      //   headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      //   body: 'fullname=' + fullname + '&email=' + email + '&phonenumber=' + phonenumber
+      // })
+      //   .then(resp => resp.json().then(data => ({ status: resp.status, body: data })))
+      //   .then(json => {
+      //     if (json.status === 200)//İf request success show fullname
+      //       message = json.body.fullname + ' ' + json.body.message;
+      //     else
+      //       message = json.body.message;
+
+      //     setResult(message);
+      //     setDatatable();
+      //   })
+      const headers = {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      };
+
+      const data = {
+        fullname: fullname,
+        email: email,
+        phonenumber: phonenumber
+      };
+
+      axios.post(createForm, data, { headers })
+        .then(response => {
+          console.log('Response:', response.data);
+          if (response.status === 200)
+            message = response.data.fullname + ' ' + response.data.message;
           else
-            message = json.body.message;           
+            message = response.data.message;
 
           setResult(message);
           setDatatable();
-      })
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
     }
     else
       setResult(errorMessage);
-	};
+  }
 
-	return (
+  return (
     <Container className="p-3">
-      <div className="App">
+      <div className="app">
         <form onSubmit={(event) => handleSumbit(event)}>
           <div className="col-md-12">
             <div className="row">
@@ -135,41 +151,41 @@ function App() {
             <div className="row offset-md-3">
               <div className="col-md-3"> Fullname : </div>
               <div className="col-md-4">
-                <input className="form-control" type="text" id="fullname"name="fullname"	value={fullname} onChange={(event) => handleChangeFullName(event)}/>
+                <input className="form-control" type="text" id="fullname" name="fullname" value={fullname} onChange={(event) => handleChangeFullName(event)} />
               </div>
             </div>
             <div className="row mt-3 offset-md-3">
               <div className="col-md-3"> E-Mail : </div>
               <div className="col-md-4">
-                <input className="form-control" type="text" id="email"name="email"	value={email} onChange={(event) => handleChangeEmail(event)}/>
+                <input className="form-control" type="text" id="email" name="email" value={email} onChange={(event) => handleChangeEmail(event)} />
               </div>
             </div>
             <div className="row mt-3 offset-md-3">
               <div className="col-md-3"> Phone Number : </div>
               <div className="col-md-4">
                 <PhoneInput
-                    country="TR"
-                    defaultCountry="TR"
-                    className="form-control"
-                    placeholder="+90"
-                    value={phonenumber}
-                    onChange={setPhoneNumber}/>
-                  </div>
+                  country="TR"
+                  defaultCountry="TR"
+                  className="form-control"
+                  placeholder="+90"
+                  value={phonenumber}
+                  onChange={setPhoneNumber} />
+              </div>
             </div>
-        
+
             <div className="row mt-3">
               <button className="form-control button button-primary col-md-3" type="submit">Save Form</button>
             </div>
           </div>
         </form>
 
-        <Error errors={result}/>
+        <Error errors={result} />
 
       </div>
-      <BootstrapTable keyField='id' data={product} columns={columns}/>
+      <BootstrapTable keyField='id' data={product} columns={columns} />
 
     </Container>
-	);
+  );
 }
 
 export default App;
