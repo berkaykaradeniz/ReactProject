@@ -18,3 +18,7 @@ cd react
 npm install
 npm start
 ```
+
+## Mysql
+
+import Database registry.sql
